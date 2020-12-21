@@ -8,4 +8,4 @@ plot(x)
 print(x)          # 1.1
 print(pi)         # 3.141593
 print(sqrt(-1))   # NaN
-print(1/0)        # Inf
+print(1 / 0)        # Inf

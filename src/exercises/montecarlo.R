@@ -8,9 +8,9 @@
 #    FUN - evaluation function
 #    type - "min" or "max"
 #    ... - extra parameters for FUN
-mcsearch <- function(N, lower, upper, FUN, type="min", ...)
+mcsearch <- function(N, lower, upper, FUN, type = "min", ...)
 { D <- length(lower)
-  s <- matrix(nrow=N, ncol=D) # set the search space
-  for(i in 1:N) s[i,] <- runif(D, lower, upper)
-  fsearch(s,FUN,type,...) # best solution
+  s <- matrix(nrow = N, ncol = D) # set the search space
+  for (i in 1:N) s[i,] <- runif(D, lower, upper)
+  fsearch(s, FUN, type, ...) # best solution
 }
