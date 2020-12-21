@@ -1,7 +1,7 @@
-s="hello world"
+s <- "hello world"
 print(class(s))   # character
 print(s)          # "hello world"
-x=1.1
+x <- 1.1
 print(class(x))   # numeric
 print(summary(x)) # summary of x
 plot(x)

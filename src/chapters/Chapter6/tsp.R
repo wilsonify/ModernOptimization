@@ -5,50 +5,50 @@ library(RCurl) # load RCurl package
 source("oea.R") # load ordered evolutionary algorithm
 
 # get Qatar - 194 cities TSP instance:
-txt=getURL("http://www.math.uwaterloo.ca/tsp/world/qa194.tsp")
+txt <- getURL("http://www.math.uwaterloo.ca/tsp/world/qa194.tsp")
 # simple parse of txt object, removing header and last line:
-txt=strsplit(txt,"NODE_COORD_SECTION") # split text into 2 parts
-txt=txt[[1]][2] # get second text part
-txt=strsplit(txt,"EOF") # split text into 2 parts
-txt=txt[[1]][1] # get first text part
+txt <- strsplit(txt, "NODE_COORD_SECTION") # split text into 2 parts
+txt <- txt[[1]][2] # get second text part
+txt <- strsplit(txt, "EOF") # split text into 2 parts
+txt <- txt[[1]][1] # get first text part
 # save data into a simple .csv file, sep=" ":
 cat(txt,file="qa194.csv")
 # read the TSP format into Data 
 # (first row is empty, thus header=TRUE)
 # get city Cartesian coordinates
 
-Data=read.table("qa194.csv",sep=" ")
-Data=Data[,3:2] # longitude and latitude
-names(Data)=c("x","y") # x and y labels
-N=nrow(Data) # number of cities
+Data <- read.table("qa194.csv", sep=" ")
+Data <- Data[, 3:2] # longitude and latitude
+names(Data) <- c("x", "y") # x and y labels
+N <- nrow(Data) # number of cities
 
 # distance between two cities (EUC_2D-norm)
 # Eulidean distance rounded to whole number
-D=dist(Data,upper=TRUE)
-D[1:length(D)]=round(D[1:length(D)])
+D <- dist(Data, upper=TRUE)
+D[seq_along(D)] <- round(D[seq_along(D)])
 # create TSP object from D:
-TD=TSP(D)
+TD <- TSP(D)
 
 set.seed(12345) # for replicability
 cat("2-opt run:\n")
-PTM=proc.time() # start clock
-R1=solve_TSP(TD,method="2-opt") 
-sec=(proc.time()-PTM)[3] # get seconds elapsed
+PTM <- proc.time() # start clock
+R1 <- solve_TSP(TD, method="2-opt")
+sec <- (proc.time()-PTM)[3] # get seconds elapsed
 print(R1) # show optimum
 cat("time elapsed:",sec,"\n")
 
-MAXIT=100000
-Methods=c("SANN","EA","LEA") # comparison of 3 methods
-RES=matrix(nrow=MAXIT,ncol=length(Methods)) 
-MD=as.matrix(D)
+MAXIT <- 100000
+Methods <- c("SANN", "EA", "LEA") # comparison of 3 methods
+RES <- matrix(nrow=MAXIT, ncol=length(Methods))
+MD <- as.matrix(D)
 
 # overall distance of a tour (evaluation function):
-tour=function(s)
+tour <- function(s)
 { # compute tour length:
   EV<<-EV+1 # increase evaluations
-  s=c(s,s[1]) # start city is also end city
-  res=0
-  for(i in 2:length(s)) res=res+MD[s[i],s[i-1]]
+  s <- c(s, s[1]) # start city is also end city
+  res <- 0
+  for(i in 2:length(s)) res <- res+MD[s[i], s[i-1]]
   # store memory with best values:
   if(res<BEST) BEST<<-res
   if(EV<=MAXIT) F[EV]<<-BEST
@@ -58,9 +58,9 @@ tour=function(s)
 }
 
 # move city index according to dir
-mindex=function(i,dir,s=NULL,N=length(s)) 
-{ res=i+dir #positive or negative jump
-  if(res<1) res=N+res else if(res>N) res=res-N
+mindex <- function(i, dir, s=NULL, N=length(s))
+{ res <- i+dir #positive or negative jump
+  if(res<1) res <- N+res else if(res>N) res <- res-N
   return(res)
 }
 
@@ -68,25 +68,25 @@ mindex=function(i,dir,s=NULL,N=length(s))
 #   first tries to improve a solution with a 
 #   local search that uses domain knowledge (MD)
 #   returns best solution and evaluation value
-local_imp_tour=function(s,p=NA)
+local_imp_tour <- function(s, p=NA)
 { # local search 
- N=length(s); ALL=1:N
- if(is.na(p)) p=sample(ALL,1) # select random position 
- I=setdiff(ALL,p)
+ N <- length(s); ALL <- 1:N
+ if(is.na(p)) p <- sample(ALL, 1) # select random position
+ I <- setdiff(ALL, p)
  
  # current distance: p to neighbors
- pprev=mindex(p,-1,N=N); pnext=mindex(p,1,N=N)
- dpcur=MD[s[pprev],s[p]]+MD[s[p],s[pnext]]
+ pprev <- mindex(p, -1, N=N); pnext <- mindex(p, 1, N=N)
+ dpcur <- MD[s[pprev], s[p]]+MD[s[p], s[pnext]]
  # new distance if p is remove to another position:
- dpnew=MD[s[pprev],s[pnext]]
+ dpnew <- MD[s[pprev], s[pnext]]
 
  # search for best insertion position for p:
- ibest=0;best=-Inf
+ ibest <- 0;best <- -Inf
  for(i in I) # extra cycle that increases computation
  {
-  inext=mindex(i,1,N=N);iprev=mindex(i,-1,N=N)
-  if(inext==p) inext=pnext
-  if(iprev==p) iprev=pprev
+  inext <- mindex(i, 1, N=N);iprev <- mindex(i, -1, N=N)
+  if(inext==p) inext <- pnext
+  if(iprev==p) iprev <- pprev
   # dinew: new distance p to neighbors if p inserted:
   # current i distance without p:
   if(i<p) { dinew=MD[s[iprev],s[p]]+MD[s[p],s[i]]
