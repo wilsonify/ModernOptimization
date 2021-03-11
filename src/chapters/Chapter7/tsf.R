@@ -6,7 +6,7 @@
 
 
 library(forecast) # load forecast package
-library(rgp) # load rgp
+library(rgp) # load rgp archived install.package("rgp", repos="https://mran.microsoft.com/snapshot/2018-01-01")
 
 series <- read.table("~/repos/ModernOptimization/tests/data/sunspots.dat")[, 2] # read from file
 
@@ -30,8 +30,9 @@ cat("arima fit MAE=",
 #  only issues h-ahead forecasts)
 LIN <- length(sunspots) # length of in-samples
 f1 <- rep(NA, forecasts)
-for (h in 1:forecasts)
-{ # execute arima with fixed coefficients but with more in-samples:
+
+for (h in 1:forecasts) {
+  # execute arima with fixed coefficients but with more in-samples:
   arima1 <- arima(series[1:(LIN + h - 1)], order = arima$arma[c(1, 3, 2)], fixed = arima$coef)
   f1[h] <- forecast(arima1, h = 1)$mean[1]
 }
@@ -44,12 +45,12 @@ ST <- inputVariableSet("x1", "x2") # same order of AR arima component
 cF1 <- constantFactorySet(function() rnorm(1)) # mean=0, sd=1
 FS <- functionSet("+", "*", "-", "/") # arithmetic
 
-# genetic programming time series function
-#   receives function f 
-#   if(h>0) then returns 1-ahead forecasts
-#   else returns MAE over fitting period (in-samples)
-gpts <- function(f, h = 0)
-{
+gpts <- function(f, h = 0) {
+  # genetic programming time series function
+  # receives function f
+  # if(h>0) then returns 1-ahead forecasts
+  # else returns MAE over fitting period (in-samples)
+
   if (h > 0) TS <- series
   else TS <- series[1:LIN]
   LTS <- length(TS)
@@ -73,13 +74,16 @@ mut <- function(func)
                 mutatesubtreeprob = 0.3, maxsubtreedepth = 4) }
 
 set.seed(12345) # set for replicability
-gp <- geneticProgramming(functionSet = FS, inputVariables = ST,
-                         constantSet = cF1,
-                         populationSize = 100,
-                         fitnessFunction = gpts,
-                         stopCondition = makeStepsStopCondition(1000),
-                         mutationFunction = mut,
-                         verbose = TRUE)
+gp <- geneticProgramming(
+  functionSet = FS,
+  inputVariables = ST,
+  constantSet = cF1,
+  populationSize = 100,
+  fitnessFunction = gpts,
+  stopCondition = makeStepsStopCondition(1000),
+  mutationFunction = mut,
+  verbose = TRUE
+)
 f2 <- gpts(gp$population[[which.min(gp$fitnessValues)]], h = forecasts)
 e2 <- maeres(outsamples - f2)
 
@@ -93,8 +97,15 @@ ymin <- min(c(outsamples, f1, f2))
 ymax <- max(c(outsamples, f1, f2))
 pdf("fsunspots.pdf")
 par(mar = c(4.0, 4.0, 0.1, 0.1))
-plot(outsamples, ylim = c(ymin, ymax), type = "b", pch = 1,
-     xlab = "time (years after 1980)", ylab = "values", cex = 0.8)
+plot(
+  outsamples,
+  ylim = c(ymin, ymax),
+  type = "b",
+  pch = 1,
+  xlab = "time (years after 1980)",
+  ylab = "values",
+  cex = 0.8
+)
 lines(f1, lty = 2, type = "b", pch = 3, cex = 0.5)
 lines(f2, lty = 3, type = "b", pch = 5, cex = 0.5)
 legend("topright", c("sunspots", text1, text2), lty = 1:3, pch = c(1, 3, 5))
