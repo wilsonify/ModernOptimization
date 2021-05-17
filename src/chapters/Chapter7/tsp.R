@@ -90,86 +90,85 @@ local_imp_tour <- function(s, p = NA)
     # dinew: new distance p to neighbors if p inserted:
     # current i distance without p:
     if (i < p) {
+      dinew <- MD[s[iprev], s[p]] + MD[s[p], s[i]]
+      dicur <- MD[s[iprev], s[i]]
+    }
+    else
+    { dinew <- MD[s[i], s[p]] + MD[s[p], s[inext]]
+      dicur <- MD[s[i], s[inext]]
+    }
+    # difference between current tour and new one:
+    dif <- (dicur + dpcur) - (dinew + dpnew)
 
- dinew=MD[s[iprev], s[p]]+MD[s[p], s[i]]
-dicur=MD[s[iprev], s[i]]
-}
-else
-{ dinew=MD[s[i], s[p]]+MD[s[p], s[inext]]
-dicur=MD[s[i],s[inext]]
-}
-# difference between current tour and new one:
-dif=(dicur+dpcur)-(dinew+dpnew)
+    if (dif > 0 && dif > best) # improved solution
+    {
+      best <- dif
+      ibest <- i
+    }
+  }
 
-if(dif>0 && dif>best) # improved solution
-{
-best=dif
-ibest=i
-}
-}
-
-if(ibest>0) # insert p in i
-s=insertion(s, p=p, i=ibest)
-return(list(eval=tour(s), solution=s))
+  if (ibest > 0) # insert p in i
+    s <- insertion(s, p = p, i = ibest)
+  return(list(eval = tour(s), solution = s))
 }
 
 # SANN:
 cat("SANN run:\n")
 set.seed(12345) # for replicability
-s=sample(1:N, N) # initial solution
-EV=0; BEST=Inf; F=rep(NA, MAXIT) # reset these vars.
-C=list(maxit=MAXIT, temp=2000, trace=TRUE, REPORT=MAXIT)
-PTM=proc.time() # start clock
-SANN=optim(s, fn=tour, gr=insertion,method="SANN", control=C)
-sec=(proc.time()-PTM)[3] # get seconds elapsed
+s <- sample(1:N, N) # initial solution
+EV <- 0; BEST <- Inf; F <- rep(NA, MAXIT) # reset these vars.
+C <- list(maxit = MAXIT, temp = 2000, trace = TRUE, REPORT = MAXIT)
+PTM <- proc.time() # start clock
+SANN <- optim(s, fn = tour, gr = insertion, method = "SANN", control = C)
+sec <- (proc.time() - PTM)[3] # get seconds elapsed
 cat("time elapsed:", sec, "\n")
-RES[, 1]=F
+RES[, 1] <- F
 
 # EA:
 cat("EA run:\n")
 set.seed(12345) # for replicability
-EV=0; BEST=Inf; F=rep(NA, MAXIT) # reset these vars.
-pSize=30; iters=ceiling((MAXIT-pSize)/(pSize-1))
-PTM=proc.time() # start clock
-OEA=oea(size=N, popSize=pSize, iters=iters, evalFunc=tour, crossfunc=ox,mutfunc=insertion, REPORT=iters, elitism=1)
-sec=(proc.time()-PTM)[3] # get seconds elapsed
+EV <- 0; BEST <- Inf; F <- rep(NA, MAXIT) # reset these vars.
+pSize <- 30; iters <- ceiling((MAXIT - pSize) / (pSize - 1))
+PTM <- proc.time() # start clock
+OEA <- oea(size = N, popSize = pSize, iters = iters, evalFunc = tour, crossfunc = ox, mutfunc = insertion, REPORT = iters, elitism = 1)
+sec <- (proc.time() - PTM)[3] # get seconds elapsed
 cat("time elapsed:", sec, "\n")
-RES[, 2]=F
+RES[, 2] <- F
 
 # Lamarckian EA (LEA):
 cat("LEA run:\n")
 set.seed(12345) # for replicability
-EV=0; BEST=Inf; F=rep(NA, MAXIT)# reset these vars.
-pSize=30; iters=ceiling((MAXIT-pSize)/(pSize-1))
-PTM=proc.time() # start clock
-LEA=oea(size=N, popSize=pSize, iters=iters, evalFunc=local_imp_tour, crossfunc=ox,mutfunc=insertion, REPORT=iters, elitism=1)
-sec=(proc.time()-PTM)[3] # get seconds elapsed
+EV <- 0; BEST <- Inf; F <- rep(NA, MAXIT) # reset these vars.
+pSize <- 30; iters <- ceiling((MAXIT - pSize) / (pSize - 1))
+PTM <- proc.time() # start clock
+LEA <- oea(size = N, popSize = pSize, iters = iters, evalFunc = local_imp_tour, crossfunc = ox, mutfunc = insertion, REPORT = iters, elitism = 1)
+sec <- (proc.time() - PTM)[3] # get seconds elapsed
 cat("time elapsed:", sec, "\n")
-RES[, 3]=F
+RES[, 3] <- F
 
 # create PDF with comparison:
-pdf("qa194-opt.pdf", paper="special")
-par(mar=c(4.0, 4.0, 0.1, 0.1))
-X=seq(1, MAXIT, length.out=200)
-ylim=c(min(RES)-50, max(RES))
-plot(X, RES[X, 1], ylim=ylim, type="l", lty=3, lwd=2, xlab="evaluations", ylab="tour distance")
-lines(X, RES[X, 2], type="l", lty=2, lwd=2)
-lines(X, RES[X, 3], type="l", lty=1, lwd=2)
-legend("topright", Methods, lwd=2, lty=3:1)
+pdf("qa194-opt.pdf", paper = "special")
+par(mar = c(4.0, 4.0, 0.1, 0.1))
+X <- seq(1, MAXIT, length.out = 200)
+ylim <- c(min(RES) - 50, max(RES))
+plot(X, RES[X, 1], ylim = ylim, type = "l", lty = 3, lwd = 2, xlab = "evaluations", ylab = "tour distance")
+lines(X, RES[X, 2], type = "l", lty = 2, lwd = 2)
+lines(X, RES[X, 3], type = "l", lty = 1, lwd = 2)
+legend("topright", Methods, lwd = 2, lty = 3:1)
 dev.off()
 
 # create 3 PDF files with best tours:
-pdf("qa194-2-opt.pdf", paper="special")
-par(mar=c(0.0, 0.0, 0.0, 0.0))
-plot(Data[c(R1[1:N], R1[1]),], type="l", xaxt="n", yaxt="n")
+pdf("qa194-2-opt.pdf", paper = "special")
+par(mar = c(0.0, 0.0, 0.0, 0.0))
+plot(Data[c(R1[1:N], R1[1]),], type = "l", xaxt = "n", yaxt = "n")
 dev.off()
-pdf("qa194-ea.pdf", paper="special")
-par(mar=c(0.0, 0.0, 0.0, 0.0))
-b=OEA$population[which.min(OEA$evaluations),]
-plot(Data[c(b, b[1]),], type="l", xaxt="n", yaxt="n")
+pdf("qa194-ea.pdf", paper = "special")
+par(mar = c(0.0, 0.0, 0.0, 0.0))
+b <- OEA$population[which.min(OEA$evaluations),]
+plot(Data[c(b, b[1]),], type = "l", xaxt = "n", yaxt = "n")
 dev.off()
-pdf("qa194-lea.pdf", paper="special")
-par(mar=c(0.0, 0.0, 0.0, 0.0))
-b=LEA$population[which.min(LEA$evaluations),]
-plot(Data[c(b, b[1]),], type="l", xaxt="n", yaxt="n")
+pdf("qa194-lea.pdf", paper = "special")
+par(mar = c(0.0, 0.0, 0.0, 0.0))
+b <- LEA$population[which.min(LEA$evaluations),]
+plot(Data[c(b, b[1]),], type = "l", xaxt = "n", yaxt = "n")
 dev.off()
